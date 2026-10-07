@@ -1,0 +1,364 @@
+{
+  "name": "put-screener",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://screener:8000/runs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        256,
+        -16
+      ],
+      "id": "4a05086f-b545-4925-8643-c3b8d0178109",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -16
+      ],
+      "id": "b861735e-3829-48a5-af1f-d000d8cf5523",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "url": "http://screener:8000/runs/current",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        -80
+      ],
+      "id": "202e9941-981e-4954-bf07-491c9ed961ba",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "600abe37-f0c2-4b07-aefd-6fda5e51bc58",
+              "leftValue": "={{ $json.state }}",
+              "rightValue": "finished",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        -16
+      ],
+      "id": "585c8c33-1013-4581-b176-e2c15dbf928c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.exit_code }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "a7955c50-2dc4-4491-b0ec-8387caf19e40"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "succeeded"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "150edbc1-17f2-4fde-995a-75700ca1b16c",
+                    "leftValue": "={{ $json.exit_code }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7cca6f7a-0d33-4598-9194-87af94deb3ee",
+                    "leftValue": "={{ $json.exit_code }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "degraded"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        -32
+      ],
+      "id": "96fb825c-2939-469e-b98f-f599d38e0166",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ '**Put screener** · ' + $json.manifest.tickers_screened + '/' + $json.manifest.tickers_total + ' screened · ' + $json.manifest.final_ranked + ' picks · spot at screen time\\n```\\n' + $json.ranked.map(r => r.underlyingSymbol + ' $' + r.spot_price.toFixed(2) + ' → $' + r.strike + '  ' + (r.otm_pct*100).toFixed(1) + '% OTM  bid ' + r.bid + '  roc ' + (r.return_on_capital*100).toFixed(2) + '%  ann ' + (r.annualized_return*100).toFixed(0) + '%  ' + r.dte + 'd  x' + r.contracts + '  Δ' + r.delta.toFixed(2) + '  θ' + (r.theta != null ? r.theta.toFixed(2) : '?')).join('\\n').slice(0, 1850) + '\\n```' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -208
+      ],
+      "id": "eea5abdf-ace8-488d-920c-e05e01b53382",
+      "name": "Discord",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "REPLACE_ME",
+          "name": "REPLACE_ME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ '**Screener ' + $json.status + '** — exit ' + $json.exit_code + '\\n' + $json.manifest.tickers_screened + '/' + $json.manifest.tickers_total + ' screened, ' + $json.manifest.tickers_errored + ' errored\\n```\\n' + String($json.error).slice(0, 1500) + '\\n```' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -16
+      ],
+      "id": "5f6ea805-ab58-4d97-83ae-a324a86fd604",
+      "name": "Discord1",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "REPLACE_ME",
+          "name": "REPLACE_ME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ '**Screener ' + $json.status + '** — exit ' + $json.exit_code + '\\n' + $json.manifest.tickers_screened + '/' + $json.manifest.tickers_total + ' screened, ' + $json.manifest.tickers_errored + ' errored\\n```\\n' + String($json.error).slice(0, 1500) + '\\n```' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        176
+      ],
+      "id": "d1f1abc6-20ce-41d8-a730-5e29b1394a3f",
+      "name": "Discord2",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "REPLACE_ME",
+          "name": "REPLACE_ME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "45 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        -176
+      ],
+      "id": "a66caa23-416f-40b5-8706-e7431a6001b9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -16
+      ],
+      "id": "727c9143-3bbd-45a7-8547-02aa4bdef59a",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  }
+}

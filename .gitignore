@@ -1,0 +1,17 @@
+.DS_Store
+.venv/
+__pycache__/
+output/*.json
+
+# Secrets — never commit
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.env
+.env.*
+# The sidecar's env_file (docker-compose.sidecar.example.yml). Not matched
+# by the .env / .env.* patterns above — the filename has no leading dot.
+screener.env
+*.env
+output/

@@ -1,0 +1,68 @@
+# EXAMPLE FRAGMENT — not a deployable file, and not the droplet's compose
+# file. The n8n stack's compose file lives on the droplet and is not in
+# this repo; copy this service block into it rather than running this.
+#
+# Three things here are constraints, not preferences:
+#
+#   expose:, never ports:
+#       `ports:` publishes to the host and punches straight through the
+#       droplet's posture (ufw SSH-only, n8n bound to 127.0.0.1).
+#       `expose:` keeps the sidecar reachable only from other services on
+#       the same compose network — which is all n8n needs, since it calls
+#       http://screener-sidecar:8000 from inside that network.
+#
+#   env_file:, never environment:
+#       Inline `environment:` puts FINNHUB_API_KEY into the compose file,
+#       which is a tracked, copied, pasted file. screener.env stays out of
+#       git (see .gitignore) and off the image (see .dockerignore). It does
+#       not exist on the droplet yet — that is Phase 9, and until it does
+#       the sidecar's /preflight will report ready: false and any run will
+#       end failed at phase="preflight".
+#
+#       FINNHUB_API_KEY is the ONLY secret this container needs.
+#       DISCORD_WEBHOOK_URL deliberately does NOT belong here: it lives in
+#       n8n's credential store, and n8n owns Discord alerting by branching
+#       on exit_code. The sidecar injects NullNotifier and never posts.
+#
+#   the output volume
+#       run_manifest.json is the durable record of what happened. Without
+#       a volume it dies with the container, and a run interrupted by a
+#       restart leaves nothing behind to explain itself.
+
+services:
+  screener-sidecar:
+    build:
+      # Repo root, because the pipeline resolves fixtures/ and output/ as
+      # siblings of chain-service/.
+      context: .
+      dockerfile: chain-service/Dockerfile
+    image: put-screener-sidecar:latest
+    container_name: screener-sidecar
+    restart: unless-stopped
+
+    # Reachable at http://screener-sidecar:8000 from n8n, and from nowhere
+    # off the box. NEVER change this to ports:.
+    expose:
+      - "8000"
+
+    # FINNHUB_API_KEY only. The Discord webhook is n8n's, held in n8n's
+    # credential store — do not add it here.
+    env_file:
+      - ./screener.env
+
+    volumes:
+      # Named volume, so `docker compose down` does not take the manifest
+      # and the shortlist with it.
+      - screener-output:/app/output
+
+    networks:
+      - n8n
+
+# n8n's own network, already defined in the droplet's compose file. Declared
+# external here so this block does not try to create a second one.
+networks:
+  n8n:
+    external: true
+
+volumes:
+  screener-output:

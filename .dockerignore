@@ -1,0 +1,20 @@
+# The local venv is 3.9 and ~200MB; the image builds its own 3.12 deps.
+chain-service/.venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+**/.pytest_cache/
+.git/
+.gitignore
+**/.DS_Store
+
+# Run artifacts belong on the mounted volume, never baked into the image —
+# a stale screen_ranked.json shipped inside the image is exactly the "is
+# this today's shortlist?" ambiguity the manifest exists to remove.
+output/
+
+# Secrets, belt and braces. .gitignore already covers these; a build
+# context is a second way files leave the working tree.
+*.env
+screener.env
+notes/

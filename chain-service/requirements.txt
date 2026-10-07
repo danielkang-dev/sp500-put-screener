@@ -1,0 +1,20 @@
+# Pipeline
+yfinance==1.2.0
+pandas==2.3.3
+numpy==2.0.2
+requests==2.32.5
+curl_cffi==0.13.0
+beautifulsoup4==4.15.0
+openpyxl==3.1.5
+
+# Sidecar (api.py). uvicorn[standard] rather than bare uvicorn for the
+# httptools/uvloop event loop — this serves one poller, but the sidecar is
+# the process a ten-minute screen runs inside and the loop has to stay
+# responsive to /runs/{id} while the worker thread is busy.
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Dev/test
+pytest==8.4.2
+# starlette's TestClient is httpx-backed; not needed at runtime.
+httpx==0.28.1
