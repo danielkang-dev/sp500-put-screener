@@ -46,7 +46,7 @@ The tests include hand-worked reference values for the Black-Scholes calculation
 
 ## Data sources
 
-Option chains from Yahoo Finance (through `yfinance`), the stock list from SSGA's SPY holdings file, earnings dates from Finnhub (needs a free API key). `fixtures/` holds the three saved chains the tests need, and the stock list.
+Option chains from Yahoo Finance (through `yfinance`), the stock list from SSGA's SPY holdings file, earnings dates from Finnhub (needs a free API key). `fixtures/` holds the stock list and the three saved option chains the tests run on.
 
 ## My role
 
