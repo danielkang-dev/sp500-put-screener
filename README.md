@@ -1,6 +1,6 @@
 # S&P 500 daily put screener (Python + n8n)
 
-A pipeline that screens about 500 S&P 500 stocks every weekday morning for cash-secured put candidates, and posts a ranked shortlist of up to 20 to a Discord channel.
+A pipeline that screens about 500 S&P 500 stocks every weekday morning for cash-secured put candidates, and posts a ranked shortlist of top 15 to a Discord channel.
 
 Built for a private client, an individual investor who wanted a daily shortlist matching a set of rules. Shared with the client's permission.
 
