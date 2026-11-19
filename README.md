@@ -10,6 +10,10 @@ Built for a private client, an individual investor who wanted a daily shortlist 
 
 This repo is a showcase copy of the current code, without the commit history. Credentials and IDs in the n8n export are placeholders.
 
+![Discord message from the screener: 502 of 503 stocks screened, 15 picks with strike, bid and return](docs/discord-shortlist.png)
+
+*A live run's shortlist in Discord, 11 Sep 2026 (bot name hidden).*
+
 ## What it does
 
 ```mermaid
@@ -17,7 +21,7 @@ flowchart TD
     A[n8n schedule: weekdays 9:45 AM ET] -->|POST /runs| B[Screener service, FastAPI in Docker]
     B --> C[Fetch option chains for each stock]
     C --> D[Filter: bid, distance out of the money, strike range, return, delta, liquidity]
-    D --> E[Rank: drop earnings before expiry, best contract per stock, top 20]
+    D --> E[Rank: drop earnings before expiry, best contract per stock, top 15]
     A --> F[Wait, then poll /runs/current until finished]
     F --> G{Exit code}
     G -- succeeded --> H[Discord: ranked table]
